@@ -10,36 +10,32 @@ namespace VkDialogParser
 
         static async Task Parse(string token)
         {
-            var vk = new VkHttpProvider(token);
-            var http = new HttpClient();
 
             List<ChatModel>? chats = null;
             using (var db = new EfModel())
             {
-                await vk.ParseConversations(800)
-                        .ForEachAsync(chat => chat.Save(db, insert: true));
-                chats = db.Chats.ToList();
+                using (var vk = new VkHttpProvider(token))
+                {
+                    await vk.ParseConversations(800)
+                            .ForEachAsync(chat => chat.Save(db, insert: true));
+                    chats = db.Chats.ToList();
+                }
             }
 
             foreach (var chat in chats)
             {
-                var db = new EfModel();
-                int count = 0;
-
-                await foreach(var msg in vk.ParseMessages(http, db, chat, 1_000_000))
+                for (int i = 0; i < 1_000_000; i += 1000)
                 {
-                    msg.Save(db, insert: true);
-                    count++;
-
-                    if (count % 1000 == 0)
+                    using (var vk = new VkHttpProvider(token))
                     {
-                        db = new();
-                        http = new();
-                        vk = new(token);
-
-                        GC.Collect();
-                        GC.WaitForPendingFinalizers();
-                        GC.Collect();
+                        using (var http = new HttpClient())
+                        {
+                            using (var db = new EfModel())
+                            {
+                                await vk.ParseMessages(http, db.Chats.First(c => c.Id == chat.Id), 1_000, i)
+                                        .ForEachAsync(msg => msg.Save(db, insert: true));
+                            }
+                        }
                     }
                 }
                
