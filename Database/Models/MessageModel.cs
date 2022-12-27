@@ -12,7 +12,7 @@ namespace VkDialogParser.Database.Models
     {
         public long VkId { get; set; }
 
-        public long SenderVkId { get; set; }
+        public UserModel Sender { get; set; }
 
         public long VkDate { get; set; }
 

@@ -49,13 +49,45 @@ namespace VkDialogParser.VkUtils
             }
         }
 
-        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, HttpClient http, ChatModel chat, int count = 200_000, int offset = 0)
+        internal static async Task<UserModel> GetUserInfo(this VkHttpProvider vk, EfModel db, HttpClient http, long VkId)
         {
-            MessageModel setMessage(dynamic item) => new MessageModel
+            var user = db.Users.FirstOrDefault(u => u.VkId == VkId);
+            if (user is not null) return user;
+
+            var args = new Dictionary<string, string>();
+            args.Add("user_ids", VkId + "");
+            args.Add("fields", "status,photo_200,status,city,bdate");
+
+            dynamic response = (await vk.GetAsync("users.get", args)).response[0];
+
+            user = new UserModel
+            {
+                VkId = VkId,
+                Name = response.first_name,
+                Surname = response.last_name,
+            };
+
+            try { user.Status = response.status; } catch { }
+            try { user.DateOfBirth = response.bdate; } catch { }
+            try { user.City = response.city.title; } catch { }
+            try
+            {
+                string link = response.photo_200;
+                var contentResponse = await http.GetAsync(link);
+                var data = await contentResponse.Content.ReadAsStreamAsync();
+                user.Photo = data.ReadFully();
+            }
+            catch { }
+
+            return user;
+        }
+        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, EfModel db, HttpClient http, ChatModel chat, int count = 200_000, int offset = 0)
+        {
+            async Task<MessageModel> setMessage(dynamic item) => new MessageModel
             {
                 VkId = (long)item.id,
-                SenderVkId = (long)item.from_id,
-                Chat = chat,
+                Sender = await vk.GetUserInfo(db, http, (long)item.from_id),
+                Chat = db.Chats.First(c => c.Id == chat.Id),
                 Text = item.text,
                 VkDate = (long)item.date
             };
@@ -81,12 +113,12 @@ namespace VkDialogParser.VkUtils
                     MessageModel? msg = null;
                     contains = true;
 
-                    try { msg = setMessage(item); }
+                    try { msg = await setMessage(item); }
                     catch (Exception ex) { ex.Log(); }
 
                     if (msg is null) { goto Step; }
 
-                    try { msg.Replay = setMessage(item.reply_message); }
+                    try { msg.Replay = await setMessage(item.reply_message); }
                     catch { }
 
                     try
@@ -125,9 +157,9 @@ namespace VkDialogParser.VkUtils
 
                                 if (link is not null)
                                 {
-                                    var ogg_response = await http.GetAsync(link);
+                                    var contentResponse = await http.GetAsync(link);
 
-                                    var data = await ogg_response.Content.ReadAsStreamAsync();
+                                    var data = await contentResponse.Content.ReadAsStreamAsync();
 
                                     var attach = new FileContentModel
                                     {

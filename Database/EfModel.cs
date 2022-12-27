@@ -21,5 +21,6 @@ namespace VkDialogParser.Database
         public DbSet<MessageModel> Messages { get; set; }
         public DbSet<FileContentModel> Files { get; set; }
         public DbSet<ChatModel> Chats { get; set; }
+        public DbSet<UserModel> Users { get; set; }
     }
 }
