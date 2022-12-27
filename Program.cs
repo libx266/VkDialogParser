@@ -33,7 +33,7 @@ namespace VkDialogParser
                         {
                             using (var db = new EfModel())
                             {
-                                await vk.ParseMessages(db, http, chat, 1_000, i, stop)
+                                await vk.ParseMessages(db, http, chat, stop, 1_000, i)
                                         .ForEachAsync(msg => msg.Save(db, insert: true));
 
                                 if (stop.IsComplete) break;
