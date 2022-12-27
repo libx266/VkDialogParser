@@ -133,7 +133,7 @@ namespace VkDialogParser.VkUtils
                                     {
                                         FileName = link.Split('/').Last().Split('?').First(),
                                         Message = msg,
-                                        Content = data.ReadFully()
+                                        Content = data.SaveImage()
                                     };
 
                                     msg.Attachments.Add(attach);

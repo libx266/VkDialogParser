@@ -1,9 +1,14 @@
 ﻿using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace VkDialogParser
 {
@@ -15,17 +20,22 @@ namespace VkDialogParser
             return false;
         }
 
-        internal static byte[] ReadFully(this Stream input)
+        internal static byte[] SaveImage(this Stream input)
         {
-            byte[] buffer = new byte[16 * 1024];
-            using (var ms = new MemoryStream())
+            using (var image = Image.Load<Rgb24>(input))
             {
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+                if (image.Height > 720)
                 {
-                    ms.Write(buffer, 0, read);
+                    double coef = (double)720 / (double)image.Height;
+
+                    image.Mutate(ctx => ctx.Resize((int)((double)image.Width * coef), 720));  
                 }
-                return ms.ToArray();
+
+                using (var ms = new MemoryStream())
+                {
+                    image.SaveAsJpeg(ms, new JpegEncoder { Quality = 60 });
+                    return ms.ToArray();
+                }
             }
         }
     }
