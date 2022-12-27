@@ -8,6 +8,8 @@ namespace VkDialogParser.Database.Models
 {
     public class FileContentModel : BaseModel
     {
+        public MessageModel Message { get; set; } 
+
         public string FileName { get; set; }
 
         public byte[] Content { get; set; }
