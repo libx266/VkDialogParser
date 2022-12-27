@@ -26,20 +26,13 @@ namespace VkDialogParser
                 var db = new EfModel();
                 int count = 0;
 
-                await foreach(var msg in vk.ParseMessages(http, chat, 1_000_000))
+                await foreach(var msg in vk.ParseMessages(http, db.Chats.First(c => c.Id == chat.Id), 1_000_000))
                 {
-                    if (msg.Replay is not null)
-                        msg.Replay.Save(db, true);
-                    
                     msg.Save(db, insert: true);
                     count++;
 
                     if (count % 1000 == 0)
                     {
-                        db.Dispose();
-                        http.Dispose();
-                        vk.Dispose();
-
                         db = new();
                         http = new();
                         vk = new(token);
