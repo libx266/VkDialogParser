@@ -15,15 +15,8 @@ namespace VkDialogParser
 
             using (var db = new EfModel())
             {
-                await foreach(var chat in vk.ParseConversations(600))
-                {
-                    chat.Save(db, insert: true);
-
-                    await foreach(var msg in vk.ParseMessages(http, chat))
-                    {
-                        msg.Save(db, insert: true);
-                    }
-                }
+                await vk.ParseConversations(800).ForEachAsync(chat => chat.Save(db, insert: true));
+                db.Chats.ToList().ForEach(async chat => await vk.ParseMessages(http, chat, 1_000_000).ForEachAsync(msg => msg.Save(db, insert: true)));
             }
         }
     }

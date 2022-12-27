@@ -28,7 +28,7 @@ namespace VkDialogParser.VkUtils
                         Name = item.conversation.chat_settings.title,
                     };
 
-                    Console.WriteLine(chat);
+                    //Console.WriteLine(chat);
                     yield return chat;
                 }
 
@@ -116,7 +116,7 @@ namespace VkDialogParser.VkUtils
                         catch (Exception ex) { ex.Log(); }
                     }
 
-                    Console.WriteLine(msg);
+                    //Console.WriteLine(msg);
                     yield return msg;
 
                 }
