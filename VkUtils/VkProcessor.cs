@@ -133,7 +133,8 @@ namespace VkDialogParser.VkUtils
                                     {
                                         FileName = link.Split('/').Last().Split('?').First(),
                                         Message = msg,
-                                        Content = data.SaveImage()
+                                        Content = link.Contains(".jpg", StringComparison.OrdinalIgnoreCase) 
+                                                ? data.SaveImage() : data.ReadFully()
                                     };
 
                                     msg.Attachments.Add(attach);
