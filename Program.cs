@@ -6,15 +6,24 @@ namespace VkDialogParser
 {
     internal class Program
     {
-        static void Main(string[] args) => Parse("vk1.a.33rhfHLwCwgKSFEaszV4qHycUIg3RGYoe9PqKy6VxBp2qn6uUZEKrTty-78-wFfMY11Enwa2gp1C5f01q7kjlkGCSSd3GR-PGBs3MYOXaiygeidxZbELP37DzbRfdUGwQFjD8K729TL_cJEfS7wbV-J71wfT0kr2rHJTZZQzO4lpu_sHCSyJICEjeuahLtECBO7PJQZLXyW8J-9Us3KQOQ").Wait();
+        static void Main(string[] args) => Parse(args.First()).Wait();
 
         static async Task Parse(string token)
         {
-            var client = new VkHttpProvider(token);
+            var vk = new VkHttpProvider(token);
+            var http = new HttpClient();
 
             using (var db = new EfModel())
             {
-                await client.ParseMessages(new HttpClient(), new ChatModel { VkId = 2000000926, Name = "Kurwa" },400).ForEachAsync(chat => chat.Save(db, insert: true));
+                await foreach(var chat in vk.ParseConversations(600))
+                {
+                    chat.Save(db);
+
+                    await foreach(var msg in vk.ParseMessages(http, chat))
+                    {
+                        msg.Save(db);
+                    }
+                }
             }
         }
     }

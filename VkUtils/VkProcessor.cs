@@ -12,16 +12,27 @@ namespace VkDialogParser.VkUtils
     {
         internal static async IAsyncEnumerable<ChatModel> ParseConversations(this VkHttpProvider vk, int count)
         {
-            dynamic? response = await vk.GetAsync("messages.getConversations", new() { ["count"] = count + "" });
-
-            foreach (dynamic item in response.response.items)
+            int offset = 0;
+            while (true)
             {
-                var chat = new ChatModel
+                dynamic? response = null;
+
+                try { response = await vk.GetAsync("messages.getConversations", new() { ["count"] = 200 + "", ["offset"] = offset + "" }); }
+                catch (Exception ex) { ex.Log(); continue; }
+
+                foreach (dynamic item in response.response.items)
                 {
-                    VkId = item.conversation.peer.id,
-                    Name = item.conversation.chat_settings.title,
-                };
-                yield return chat;
+                    var chat = new ChatModel
+                    {
+                        VkId = item.conversation.peer.id,
+                        Name = item.conversation.chat_settings.title,
+                    };
+                    yield return chat;
+                }
+
+                offset += 200;
+
+                if (offset >= count) break;
             }
         }
 
@@ -30,12 +41,16 @@ namespace VkDialogParser.VkUtils
             int offset = 0;
             while (true)
             {
+
                 var args = new Dictionary<string, string>();
                 args.Add("count", "200");
                 args.Add("offset", offset + "");
                 args.Add("peer_id", chat.VkId + "");
 
-                dynamic? response = await vk.GetAsync("messages.getHistory", args);
+                dynamic? response = null;
+
+                try { response = await vk.GetAsync("messages.getHistory", args); }
+                catch (Exception ex) { ex.Log(); continue; }
 
                 foreach (dynamic item in response.response.items)
                 {
@@ -52,25 +67,48 @@ namespace VkDialogParser.VkUtils
                     {
                         try
                         {
+                            string? link = null;
                             switch ((string)content.type)
                             {
-                                case "audio_message":
+                                case "audio_message": link = content.audio_message.link_ogg; break;
+
+                                case "photo":
                                 {
-                                    string link = content.audio_message.link_ogg;
-                                    var ogg_response = await http.GetAsync(link);
+                                    int MaxWidth = 0;
+                                    dynamic? MaxSize = null;
 
-                                    var data = await ogg_response.Content.ReadAsStreamAsync();
-
-                                    var attach = new FileContentModel
+                                    foreach (dynamic size in content.photo.sizes)
                                     {
-                                        FileName = link.Split('/').Last(),
-                                        Message = msg,
-                                        Content = data.ReadFully()
-                                    };
+                                        int width = (int)size.width;
+                                        if (MaxWidth < width)
+                                        {
+                                            MaxWidth = width;
+                                            MaxSize = size;
+                                        }
+                                    }
+                                    if (MaxSize is not null)
+                                    {
+                                        link = (string)MaxSize.url;
+                                    }
 
-                                    msg.Attachments.Add(attach);
-    
                                 }; break;
+
+                            }
+
+                            if (link is not null)
+                            {
+                                var ogg_response = await http.GetAsync(link);
+
+                                var data = await ogg_response.Content.ReadAsStreamAsync();
+
+                                var attach = new FileContentModel
+                                {
+                                    FileName = link.Split('/').Last().Split('?').First(),
+                                    Message = msg,
+                                    Content = data.ReadFully()
+                                };
+
+                                msg.Attachments.Add(attach);
                             }
                         }
                         catch (Exception ex) { ex.Log(); }
