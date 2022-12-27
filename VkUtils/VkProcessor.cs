@@ -27,6 +27,8 @@ namespace VkDialogParser.VkUtils
                         VkId = item.conversation.peer.id,
                         Name = item.conversation.chat_settings.title,
                     };
+
+                    Console.WriteLine(chat);
                     yield return chat;
                 }
 
