@@ -52,6 +52,16 @@ namespace VkDialogParser.VkUtils
         internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, HttpClient http, ChatModel chat, int count = 200_000)
         {
             int offset = 0;
+            MessageModel setMessage(dynamic item) => new MessageModel
+            {
+                VkId = (long)item.id,
+                SenderVkId = (long)item.from_id,
+                Chat = chat,
+                Text = item.text,
+                VkDate = (long)item.date
+            };
+
+
             while (true)
             {
 
@@ -72,19 +82,13 @@ namespace VkDialogParser.VkUtils
                     MessageModel? msg = null;
                     contains = true;
 
-                    try
-                    {
-                        msg = new MessageModel
-                        {
-                            VkId = item.id,
-                            SenderVkId = item.from_id,
-                            Chat = chat,
-                            Text = item.text,
-                            VkDate = Extensions.UnixTimeStampToDateTime((long)item.date)
-                        };
-                    }
+                    try { msg = setMessage(item); }
                     catch (Exception ex) { ex.Log(); }
 
+                    if (msg is null) { goto Step; }
+
+                    try { msg.Replay = setMessage(item.reply_message); }
+                    catch { }
 
                     try
                     {
