@@ -26,7 +26,7 @@ namespace VkDialogParser
                 var db = new EfModel();
                 int count = 0;
 
-                await foreach(var msg in vk.ParseMessages(http, db.Chats.First(c => c.Id == chat.Id), 1_000_000))
+                await foreach(var msg in vk.ParseMessages(http, db, chat, 1_000_000))
                 {
                     msg.Save(db, insert: true);
                     count++;

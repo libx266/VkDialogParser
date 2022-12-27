@@ -49,14 +49,14 @@ namespace VkDialogParser.VkUtils
             }
         }
 
-        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, HttpClient http, ChatModel chat, int count = 200_000)
+        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, EfModel db, HttpClient http, ChatModel chat, int count = 200_000)
         {
             int offset = 0;
             MessageModel setMessage(dynamic item) => new MessageModel
             {
                 VkId = (long)item.id,
                 SenderVkId = (long)item.from_id,
-                Chat = chat,
+                Chat = db.Chats.First(c => c.Id == chat.Id),
                 Text = item.text,
                 VkDate = (long)item.date
             };
