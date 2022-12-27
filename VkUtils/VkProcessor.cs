@@ -65,9 +65,12 @@ namespace VkDialogParser.VkUtils
                 try { response = await vk.GetAsync("messages.getHistory", args); }
                 catch (Exception ex) { ex.Log(); goto Step; }
 
+                bool contains = false;
+
                 foreach (dynamic item in response.response.items)
                 {
                     MessageModel? msg = null;
+                    contains = true;
 
                     try
                     {
@@ -141,6 +144,8 @@ namespace VkDialogParser.VkUtils
                     if (msg is not null) yield return msg;
 
                 }
+
+                if (!contains) break;
                 
                 Step:
                 offset += 200;

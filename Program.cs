@@ -13,10 +13,25 @@ namespace VkDialogParser
             var vk = new VkHttpProvider(token);
             var http = new HttpClient();
 
+            List<ChatModel>? chats = null;
             using (var db = new EfModel())
             {
-                await vk.ParseConversations(800).ForEachAsync(chat => chat.Save(db, insert: true));
-                db.Chats.ToList().ForEach(chat => vk.ParseMessages(http, chat, 1_000_000).ForEachAsync(msg => msg.Save(db, insert: true)).Wait());
+                await vk.ParseConversations(800)
+                        .ForEachAsync(chat => chat.Save(db, insert: true));
+                chats = db.Chats.ToList();
+            }
+
+            foreach (var chat in chats)
+            {
+                using (var db = new EfModel())
+                {
+                    await vk.ParseMessages(http, chat, 1_000_000)
+                            .ForEachAsync(msg => msg.Save(db, insert: true));
+                }
+
+                GC.Collect(); 
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
             }
         }
     }
