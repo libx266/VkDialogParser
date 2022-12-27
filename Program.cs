@@ -6,7 +6,7 @@ namespace VkDialogParser
 {
     internal class Program
     {
-        static void Main(string[] args) => Parse(args.First()).Wait();
+        static void Main(string[] args) => Parse("vk1.a.Elo31yh-ZKCDyl9hQ_zhMk0B3TFuT1wsiIWfw5OaAqyVmsx99CT3B_Y-Mgcwqc8TwS0dn-0jrNSfRHYLTX68llYLZ9b_hM3xM79KXTLM2Lozo_RHlZrT5-OmXSAP2jBynHyJUQ_dps4p1ftT08QpUy6XMQOemogSmHrQZ0fEY95AFaG_cxg9r6V8zYzVMa0Xy1aYvk7Z0zPOmxJ1WcyEbg").Wait();
 
         static async Task Parse(string token)
         {
