@@ -63,7 +63,7 @@ namespace VkDialogParser.VkUtils
                 dynamic? response = null;
 
                 try { response = await vk.GetAsync("messages.getHistory", args); }
-                catch (Exception ex) { ex.Log(); continue; }
+                catch (Exception ex) { ex.Log(); goto Step; }
 
                 foreach (dynamic item in response.response.items)
                 {
@@ -141,7 +141,8 @@ namespace VkDialogParser.VkUtils
                     if (msg is not null) yield return msg;
 
                 }
-
+                
+                Step:
                 offset += 200;
 
                 if (offset >= count) break;
