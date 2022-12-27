@@ -114,6 +114,7 @@ namespace VkDialogParser.VkUtils
                         catch (Exception ex) { ex.Log(); }
                     }
 
+                    Console.WriteLine(msg);
                     yield return msg;
 
                 }
