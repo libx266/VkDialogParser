@@ -14,6 +14,7 @@ namespace VkDialogParser.Database.Models
 
         public string FileName { get; set; }
 
+        [JsonIgnore]
         public byte[] Content { get; set; }
     }
 }

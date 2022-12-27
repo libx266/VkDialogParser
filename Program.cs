@@ -17,11 +17,11 @@ namespace VkDialogParser
             {
                 await foreach(var chat in vk.ParseConversations(600))
                 {
-                    chat.Save(db);
+                    chat.Save(db, insert: true);
 
                     await foreach(var msg in vk.ParseMessages(http, chat))
                     {
-                        msg.Save(db);
+                        msg.Save(db, insert: true);
                     }
                 }
             }
