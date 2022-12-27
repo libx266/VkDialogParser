@@ -19,7 +19,7 @@ namespace VkDialogParser.VkUtils
                 dynamic? response = null;
 
                 try { response = await vk.GetAsync("messages.getConversations", new() { ["count"] = 200 + "", ["offset"] = offset + "" }); }
-                catch (Exception ex) { ex.Log(); goto Step }
+                catch (Exception ex) { ex.Log(); goto Step; }
 
 
                 foreach (dynamic item in response.response.items)
