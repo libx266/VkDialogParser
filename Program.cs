@@ -24,6 +24,7 @@ namespace VkDialogParser
 
             foreach (var chat in chats)
             {
+                var stop = new Complete();
                 for (int i = 0; i < 1_000_000; i += 1000)
                 {
                     using (var vk = new VkHttpProvider(token))
@@ -32,8 +33,10 @@ namespace VkDialogParser
                         {
                             using (var db = new EfModel())
                             {
-                                await vk.ParseMessages(db, http, chat, 1_000, i)
+                                await vk.ParseMessages(db, http, chat, 1_000, i, stop)
                                         .ForEachAsync(msg => msg.Save(db, insert: true));
+
+                                if (stop.IsComplete) break;
                             }
                         }
                     }

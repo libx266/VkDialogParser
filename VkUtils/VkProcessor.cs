@@ -81,7 +81,7 @@ namespace VkDialogParser.VkUtils
 
             return user;
         }
-        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, EfModel db, HttpClient http, ChatModel chat, int count = 200_000, int offset = 0)
+        internal static async IAsyncEnumerable<MessageModel> ParseMessages(this VkHttpProvider vk, EfModel db, HttpClient http, ChatModel chat, int count = 200_000, int offset = 0, Complete stopIndicator)
         {
             async Task<MessageModel> setMessage(dynamic item) => new MessageModel
             {
@@ -181,7 +181,11 @@ namespace VkDialogParser.VkUtils
 
                 }
 
-                if (!contains) break;
+                if (!contains)
+                {
+                    stopIndicator.IsComplete = true;
+                    break;
+                }
                 
                 Step:
                 offset += 200;
